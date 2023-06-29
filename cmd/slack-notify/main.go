@@ -3,13 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/slack-go/slack"
-	"google.golang.org/api/option"
 	"log"
 	"os"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/slack-go/slack"
+	"google.golang.org/api/option"
 
 	"golang.org/x/net/context"
 	"google.golang.org/api/calendar/v3"
@@ -24,27 +25,27 @@ func init() {
 }
 
 type opt struct {
-	calendarId        string
+	calendarID        string
 	credentials       string
 	credentialsFile   string
 	eventFilterRegexp string
 	location          string
 	slackAccessToken  string
-	slackChannelId    string
+	slackChannelID    string
 	subject           string
 	timeout           time.Duration
 	version           bool
 }
 
 type eventFetcher struct {
-	calendarId  string
+	calendarID  string
 	credentials []byte
 	filter      *regexp.Regexp
 	location    *time.Location
 }
 
 func newEventFetcher(opt *opt) (*eventFetcher, error) {
-	ef := &eventFetcher{calendarId: opt.calendarId}
+	ef := &eventFetcher{calendarID: opt.calendarID}
 
 	// credentials を読み込む
 	if len(opt.credentials) > 0 {
@@ -83,7 +84,7 @@ func (s *eventFetcher) fetch(ctx context.Context) ([]string, error) {
 	}
 
 	tMin, tMax := s.eventsTerm()
-	events, err := service.Events.List(s.calendarId).
+	events, err := service.Events.List(s.calendarID).
 		TimeMin(tMin.Format(time.RFC3339)).
 		TimeMax(tMax.Format(time.RFC3339)).
 		SingleEvents(true).Do()
@@ -121,10 +122,10 @@ func newSlackPoster(opt *opt) *slackPoster {
 	}
 }
 
-func (p *slackPoster) post(ctx context.Context, channelId, msg string) error {
+func (p *slackPoster) post(ctx context.Context, channelID, msg string) error {
 	logger.Printf("posting message...")
 
-	_, _, err := p.PostMessageContext(ctx, channelId, slack.MsgOptionText(msg, false))
+	_, _, err := p.PostMessageContext(ctx, channelID, slack.MsgOptionText(msg, false))
 	if err != nil {
 		return fmt.Errorf("failed to post message: %w", err)
 	}
@@ -165,19 +166,19 @@ func main() {
 
 	// Slack に投稿する
 	sp := newSlackPoster(opt)
-	if err := sp.post(ctx, opt.slackChannelId, msg); err != nil {
+	if err := sp.post(ctx, opt.slackChannelID, msg); err != nil {
 		logger.Fatalf("failed to post: %v", err)
 	}
 }
 
 func parseFlag() (*opt, error) {
-	calendarId := flag.String("calendar-id", "", "Specify Google Calendar ID")
+	calendarID := flag.String("calendar-id", "", "Specify Google Calendar ID")
 	credentials := flag.String("credentials", "", "Specify credentials")
 	credentialsFile := flag.String("credentials-file", "", "Specify credentials file")
 	eventFilterRegexp := flag.String("event-filter-regexp", ".", "Specify event filter regexp")
 	location := flag.String("location", "UTC", "Specify Location")
 	slackAccessToken := flag.String("slack-token", "", "Specify Slack Access Token")
-	slackChannelId := flag.String("slack-channel-id", "", "Specify Slack Channel ID")
+	slackChannelID := flag.String("slack-channel-id", "", "Specify Slack Channel ID")
 	subject := flag.String("subject", "", "Specify subject")
 	timeoutOption := flag.Duration("timeout", 15*time.Minute, "Specify timeout")
 	version := flag.Bool("v", false, "Show version")
@@ -190,24 +191,24 @@ func parseFlag() (*opt, error) {
 	if *credentials == "" && *credentialsFile == "" {
 		return nil, fmt.Errorf("credentials or credentials-file must be specified")
 	}
-	if *calendarId == "" {
+	if *calendarID == "" {
 		return nil, fmt.Errorf("calendar-id must be specified")
 	}
 	if *slackAccessToken == "" {
 		return nil, fmt.Errorf("slack-token must be specified")
 	}
-	if *slackChannelId == "" {
+	if *slackChannelID == "" {
 		return nil, fmt.Errorf("slack-channel-id must be specified")
 	}
 
 	return &opt{
-		calendarId:        *calendarId,
+		calendarID:        *calendarID,
 		credentials:       *credentials,
 		credentialsFile:   *credentialsFile,
 		eventFilterRegexp: *eventFilterRegexp,
 		location:          *location,
 		slackAccessToken:  *slackAccessToken,
-		slackChannelId:    *slackChannelId,
+		slackChannelID:    *slackChannelID,
 		subject:           *subject,
 		timeout:           *timeoutOption,
 		version:           *version,
