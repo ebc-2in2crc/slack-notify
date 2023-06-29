@@ -1,0 +1,29 @@
+linters-settings:
+  dupl:
+    threshold: 100
+  goconst:
+    min-len: 2
+    min-occurrences: 3
+  gocyclo:
+    min-complexity: 10
+  gofmt:
+    simplify: true
+  goimports:
+    local-prefixes: github.com/ebc-2in2crc/percentile
+
+linters:
+  enable:
+    - dupl
+    - errcheck
+    - goconst
+    - gocyclo
+    - gofmt
+    - goimports
+    - gosec
+    - govet
+    - ineffassign
+    - revive
+    - unconvert
+    - unparam
+    - unused
+    - whitespace
