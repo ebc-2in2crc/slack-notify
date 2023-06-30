@@ -184,7 +184,7 @@ func parseFlag() (*opt, error) {
 	version := flag.Bool("v", false, "Show version")
 	flag.Parse()
 
-	if version != nil {
+	if *version {
 		return &opt{version: *version}, nil
 	}
 
