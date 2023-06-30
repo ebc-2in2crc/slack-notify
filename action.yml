@@ -1,0 +1,59 @@
+name: slack-notify
+description: "Retrieve events from Google Calendar and notify to Slack."
+inputs:
+  version:
+    description: "A version to install slack-notify."
+    default: "v0.0.2"
+  credentials:
+    description: "A credentials to access Google Calendar API."
+    required: true
+  calendar-id:
+    description: "A Google calendar ID to retrieve events."
+    required: true
+  slack-token:
+    description: "A Slack access token to post a message."
+    required: true
+  slack-channel-id:
+    description: "A Slack channel ID to post a message."
+    required: true
+  event-filter-regexp:
+    description: "A regular expression to filter events."
+    required: false
+    default: "."
+  location:
+    description: "A location to retrieve events."
+    required: false
+    default: "UTC"
+  timeout:
+    description: "A timeout."
+    required: false
+    default: "15m"
+  message:
+    description: "A message to post."
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install
+      shell: bash
+      run: |
+        cd /tmp
+        curl -sLO https://github.com/ebc-2in2crc/slack-notify/releases/download/${{ inputs.version }}/slack-notify_linux_amd64.zip
+        unzip slack-notify_linux_amd64.zip
+        sudo install slack-notify_linux_amd64/slack-notify /usr/local/bin
+        rm -rf slack-notify_linux_amd64/ slack-notify_linux_amd64.zip
+        slack-notify -v
+    - name: Run
+      shell: bash
+      run: >-
+        slack-notify \
+          -credentials '${{ inputs.credentials }}' \
+          -calendar-id '${{ inputs.calendar-id }}' \
+          -slack-token '${{ inputs.slack-token }}' \
+          -slack-channel-id '${{ inputs.slack-channel-id }}' \
+          -event-filter-regexp '${{ inputs.event-filter-regexp }}' \
+          -location '${{ inputs.location }}' \
+          -timeout '${{ inputs.timeout }}' \
+          -message '${{ inputs.message }}'
