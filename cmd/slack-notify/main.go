@@ -32,7 +32,7 @@ type opt struct {
 	location          string
 	slackAccessToken  string
 	slackChannelID    string
-	subject           string
+	message           string
 	timeout           time.Duration
 	version           bool
 }
@@ -162,7 +162,7 @@ func main() {
 	for i := range events {
 		events[i] = fmt.Sprintf("• %s", events[i])
 	}
-	msg := fmt.Sprintf("<!here> %s\n\n%s", opt.subject, strings.Join(events, "\n"))
+	msg := fmt.Sprintf("%s\n\n%s", opt.message, strings.Join(events, "\n"))
 
 	// Slack に投稿する
 	sp := newSlackPoster(opt)
@@ -177,9 +177,9 @@ func parseFlag() (*opt, error) {
 	credentialsFile := flag.String("credentials-file", "", "Specify credentials file")
 	eventFilterRegexp := flag.String("event-filter-regexp", ".", "Specify event filter regexp")
 	location := flag.String("location", "UTC", "Specify Location")
+	message := flag.String("message", "", "Specify message")
 	slackAccessToken := flag.String("slack-token", "", "Specify Slack Access Token")
 	slackChannelID := flag.String("slack-channel-id", "", "Specify Slack Channel ID")
-	subject := flag.String("subject", "", "Specify subject")
 	timeoutOption := flag.Duration("timeout", 15*time.Minute, "Specify timeout")
 	version := flag.Bool("v", false, "Show version")
 	flag.Parse()
@@ -209,7 +209,7 @@ func parseFlag() (*opt, error) {
 		location:          *location,
 		slackAccessToken:  *slackAccessToken,
 		slackChannelID:    *slackChannelID,
-		subject:           *subject,
+		message:           *message,
 		timeout:           *timeoutOption,
 		version:           *version,
 	}, nil
