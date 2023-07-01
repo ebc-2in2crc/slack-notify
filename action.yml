@@ -3,7 +3,7 @@ description: "Retrieve events from Google Calendar and notify to Slack."
 inputs:
   version:
     description: "A version to install slack-notify."
-    default: "v0.0.2"
+    default: "v0.0.4"
   credentials:
     description: "A credentials to access Google Calendar API."
     required: true
