@@ -28,6 +28,10 @@ inputs:
     description: "A location to retrieve events."
     required: false
     default: "UTC"
+  target-date:
+    description: "A target date to retrieve events."
+    required: false
+    default: ""
   timeout:
     description: "A timeout."
     required: false
@@ -60,5 +64,6 @@ runs:
           -slack-channel-id '${{ inputs.slack-channel-id }}' \
           -event-filter-regexp '${{ inputs.event-filter-regexp }}' \
           -location '${{ inputs.location }}' \
+          -target-date '${{ inputs.target-date }}' \
           -timeout '${{ inputs.timeout }}' \
           -message '${{ inputs.message }}'

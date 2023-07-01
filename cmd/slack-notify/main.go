@@ -34,6 +34,7 @@ type opt struct {
 	slackAccessToken  string
 	slackChannelID    string
 	message           string
+	targetDate        string
 	timeout           time.Duration
 	version           bool
 }
@@ -42,7 +43,7 @@ type eventFetcher struct {
 	calendarID  string
 	credentials []byte
 	filter      *regexp.Regexp
-	location    *time.Location
+	targetDate  time.Time
 }
 
 func newEventFetcher(opt *opt) (*eventFetcher, error) {
@@ -64,7 +65,17 @@ func newEventFetcher(opt *opt) (*eventFetcher, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to load location: %w", err)
 	}
-	ef.location = loc
+
+	// 日付の文字列をパースする
+	if opt.targetDate == "" {
+		ef.targetDate = time.Now().In(loc)
+	} else {
+		t, err := time.ParseInLocation("2006-01-02", opt.targetDate, loc)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse target date: %w", err)
+		}
+		ef.targetDate = t
+	}
 
 	// イベントをフィルタする正規表現をコンパイルする
 	re, err := regexp.Compile(opt.eventFilterRegexp)
@@ -105,8 +116,12 @@ func (s *eventFetcher) fetch(ctx context.Context) ([]string, error) {
 }
 
 func (s *eventFetcher) eventsTerm() (timeMin, timeMax time.Time) {
-	now := time.Now().In(s.location)
-	min := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, s.location).UTC()
+	year := s.targetDate.Year()
+	month := s.targetDate.Month()
+	day := s.targetDate.Day()
+	loc := s.targetDate.Location()
+
+	min := time.Date(year, month, day, 0, 0, 0, 0, loc).UTC()
 	max := min.AddDate(0, 0, 1).UTC()
 	return min, max
 }
@@ -188,6 +203,7 @@ func parseFlag() (*opt, error) {
 	message := flag.String("message", "", "Specify message")
 	slackAccessToken := flag.String("slack-token", "", "Specify Slack Access Token")
 	slackChannelID := flag.String("slack-channel-id", "", "Specify Slack Channel ID")
+	targetDate := flag.String("target-date", "", "Specify targetDate date. e.g. 2020-01-01")
 	timeoutOption := flag.Duration("timeout", 15*time.Minute, "Specify timeout")
 	version := flag.Bool("v", false, "Show version")
 	flag.Parse()
@@ -219,6 +235,7 @@ func parseFlag() (*opt, error) {
 		slackAccessToken:  *slackAccessToken,
 		slackChannelID:    *slackChannelID,
 		message:           *message,
+		targetDate:        *targetDate,
 		timeout:           *timeoutOption,
 		version:           *version,
 	}, nil
