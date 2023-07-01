@@ -28,6 +28,7 @@ type opt struct {
 	calendarID        string
 	credentials       string
 	credentialsFile   string
+	dryRun            bool
 	eventFilterRegexp string
 	location          string
 	slackAccessToken  string
@@ -111,12 +112,14 @@ func (s *eventFetcher) eventsTerm() (timeMin, timeMax time.Time) {
 }
 
 type slackPoster struct {
+	dryRun           bool
 	slackAccessToken string
 	*slack.Client
 }
 
 func newSlackPoster(opt *opt) *slackPoster {
 	return &slackPoster{
+		dryRun:           opt.dryRun,
 		slackAccessToken: opt.slackAccessToken,
 		Client:           slack.New(opt.slackAccessToken),
 	}
@@ -124,6 +127,10 @@ func newSlackPoster(opt *opt) *slackPoster {
 
 func (p *slackPoster) post(ctx context.Context, channelID, msg string) error {
 	logger.Printf("posting message...")
+	if p.dryRun {
+		logger.Printf("dry run mode. skip posting message.")
+		return nil
+	}
 
 	_, _, err := p.PostMessageContext(ctx, channelID, slack.MsgOptionText(msg, false))
 	if err != nil {
@@ -175,6 +182,7 @@ func parseFlag() (*opt, error) {
 	calendarID := flag.String("calendar-id", "", "Specify Google Calendar ID")
 	credentials := flag.String("credentials", "", "Specify credentials")
 	credentialsFile := flag.String("credentials-file", "", "Specify credentials file")
+	dryRun := flag.Bool("dry-run", false, "Specify dry-run")
 	eventFilterRegexp := flag.String("event-filter-regexp", ".", "Specify event filter regexp")
 	location := flag.String("location", "UTC", "Specify Location")
 	message := flag.String("message", "", "Specify message")
@@ -205,6 +213,7 @@ func parseFlag() (*opt, error) {
 		calendarID:        *calendarID,
 		credentials:       *credentials,
 		credentialsFile:   *credentialsFile,
+		dryRun:            *dryRun,
 		eventFilterRegexp: *eventFilterRegexp,
 		location:          *location,
 		slackAccessToken:  *slackAccessToken,

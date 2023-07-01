@@ -10,6 +10,10 @@ inputs:
   calendar-id:
     description: "A Google calendar ID to retrieve events."
     required: true
+  dry-run:
+    description: "A dry-run flag."
+    required: false
+    default: "false"
   slack-token:
     description: "A Slack access token to post a message."
     required: true
@@ -51,6 +55,7 @@ runs:
         slack-notify \
           -credentials '${{ inputs.credentials }}' \
           -calendar-id '${{ inputs.calendar-id }}' \
+          -dry-run '${{ inputs.dry-run }}' \
           -slack-token '${{ inputs.slack-token }}' \
           -slack-channel-id '${{ inputs.slack-channel-id }}' \
           -event-filter-regexp '${{ inputs.event-filter-regexp }}' \
