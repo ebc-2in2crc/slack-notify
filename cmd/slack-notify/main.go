@@ -25,18 +25,19 @@ func init() {
 }
 
 type opt struct {
-	calendarID        string
-	credentials       string
-	credentialsFile   string
-	dryRun            bool
-	eventFilterRegexp string
-	location          string
-	slackAccessToken  string
-	slackChannelID    string
-	message           string
-	targetDate        string
-	timeout           time.Duration
-	version           bool
+	alternativeMessage string
+	calendarID         string
+	credentials        string
+	credentialsFile    string
+	dryRun             bool
+	eventFilterRegexp  string
+	location           string
+	slackAccessToken   string
+	slackChannelID     string
+	message            string
+	targetDate         string
+	timeout            time.Duration
+	version            bool
 }
 
 type eventFetcher struct {
@@ -184,7 +185,11 @@ func main() {
 	for i := range events {
 		events[i] = fmt.Sprintf("• %s", events[i])
 	}
-	msg := fmt.Sprintf("%s\n\n%s", opt.message, strings.Join(events, "\n"))
+	desc := opt.message
+	if len(events) == 0 && opt.alternativeMessage != "" {
+		desc = opt.alternativeMessage
+	}
+	msg := fmt.Sprintf("%s\n\n%s", desc, strings.Join(events, "\n"))
 
 	// Slack に投稿する
 	sp := newSlackPoster(opt)
@@ -194,6 +199,7 @@ func main() {
 }
 
 func parseFlag() (*opt, error) {
+	alternativeMessage := flag.String("alternative-message", "", "Specify alternative message")
 	calendarID := flag.String("calendar-id", "", "Specify Google Calendar ID")
 	credentials := flag.String("credentials", "", "Specify credentials")
 	credentialsFile := flag.String("credentials-file", "", "Specify credentials file")
@@ -226,17 +232,18 @@ func parseFlag() (*opt, error) {
 	}
 
 	return &opt{
-		calendarID:        *calendarID,
-		credentials:       *credentials,
-		credentialsFile:   *credentialsFile,
-		dryRun:            *dryRun,
-		eventFilterRegexp: *eventFilterRegexp,
-		location:          *location,
-		slackAccessToken:  *slackAccessToken,
-		slackChannelID:    *slackChannelID,
-		message:           *message,
-		targetDate:        *targetDate,
-		timeout:           *timeoutOption,
-		version:           *version,
+		alternativeMessage: *alternativeMessage,
+		calendarID:         *calendarID,
+		credentials:        *credentials,
+		credentialsFile:    *credentialsFile,
+		dryRun:             *dryRun,
+		eventFilterRegexp:  *eventFilterRegexp,
+		location:           *location,
+		slackAccessToken:   *slackAccessToken,
+		slackChannelID:     *slackChannelID,
+		message:            *message,
+		targetDate:         *targetDate,
+		timeout:            *timeoutOption,
+		version:            *version,
 	}, nil
 }
