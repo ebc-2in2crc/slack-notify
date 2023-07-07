@@ -2,6 +2,11 @@
 
 # slack-notify
 
+[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ebc-2in2crc/slack-notify)](https://goreportcard.com/report/github.com/ebc-2in2crc/slack-notify)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/ebc-2in2crc/slack-notify)](https://img.shields.io/github/go-mod/go-version/ebc-2in2crc/slack-notify)
+[![Version](https://img.shields.io/github/release/ebc-2in2crc/slack-notify.svg?label=version)](https://img.shields.io/github/release/ebc-2in2crc/slack-notify.svg?label=version)
+
 `slack-notify` is a command and GitHub Action to link events in your Google Calendar to Slack.
 
 ## Description
