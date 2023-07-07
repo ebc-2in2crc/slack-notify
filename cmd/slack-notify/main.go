@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -104,6 +105,10 @@ func (s *eventFetcher) fetch(ctx context.Context) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch events: %w", err)
 	}
+
+	sort.Slice(events.Items, func(i, j int) bool {
+		return events.Items[i].Start.DateTime < events.Items[j].Start.DateTime
+	})
 
 	var a []string
 	for _, item := range events.Items {
