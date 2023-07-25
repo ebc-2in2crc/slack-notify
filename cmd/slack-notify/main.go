@@ -39,6 +39,7 @@ type opt struct {
 	targetDate         string
 	timeout            time.Duration
 	version            bool
+	webhook            string
 }
 
 type eventFetcher struct {
@@ -135,6 +136,7 @@ func (s *eventFetcher) eventsTerm() (timeMin, timeMax time.Time) {
 type slackPoster struct {
 	dryRun           bool
 	slackAccessToken string
+	slackWebHook     string
 	*slack.Client
 }
 
@@ -142,12 +144,30 @@ func newSlackPoster(opt *opt) *slackPoster {
 	return &slackPoster{
 		dryRun:           opt.dryRun,
 		slackAccessToken: opt.slackAccessToken,
+		slackWebHook:     opt.webhook,
 		Client:           slack.New(opt.slackAccessToken),
 	}
 }
 
 func (p *slackPoster) post(ctx context.Context, channelID, msg string) error {
+	if err := p.postMessage(ctx, channelID, msg); err != nil {
+		return err
+	}
+
+	if err := p.postWebhook(ctx, msg); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *slackPoster) postMessage(ctx context.Context, channelID, msg string) error {
 	logger.Printf("posting message...")
+
+	if p.slackAccessToken == "" {
+		logger.Printf("slack access token is empty. skip posting message.")
+		return nil
+	}
 	if p.dryRun {
 		logger.Printf("dry run mode. skip posting message.")
 		return nil
@@ -159,6 +179,27 @@ func (p *slackPoster) post(ctx context.Context, channelID, msg string) error {
 	}
 
 	logger.Printf("posted message.")
+	return nil
+}
+
+func (p *slackPoster) postWebhook(ctx context.Context, msg string) error {
+	logger.Printf("posting webhook...")
+
+	if p.slackWebHook == "" {
+		logger.Printf("slack webhook is empty. skip posting webhook.")
+		return nil
+	}
+	if p.dryRun {
+		logger.Printf("dry run mode. skip posting webhook.")
+		return nil
+	}
+
+	message := &slack.WebhookMessage{Text: msg}
+	if err := slack.PostWebhookContext(ctx, p.slackWebHook, message); err != nil {
+		return fmt.Errorf("failed to post webhook: %w", err)
+	}
+
+	logger.Printf("posted webhook.")
 	return nil
 }
 
@@ -217,6 +258,7 @@ func parseFlag() (*opt, error) {
 	targetDate := flag.String("target-date", "", "Specify targetDate date. e.g. 2020-01-01")
 	timeoutOption := flag.Duration("timeout", 15*time.Minute, "Specify timeout")
 	version := flag.Bool("v", false, "Show version")
+	webhookOption := flag.String("webhook", "", "Specify Slack Webhook URL")
 	flag.Parse()
 
 	if *version {
@@ -229,8 +271,8 @@ func parseFlag() (*opt, error) {
 	if *calendarID == "" {
 		return nil, fmt.Errorf("calendar-id must be specified")
 	}
-	if *slackAccessToken == "" {
-		return nil, fmt.Errorf("slack-token must be specified")
+	if *slackAccessToken == "" && *webhookOption == "" {
+		return nil, fmt.Errorf("slack-token or webhook must be specified")
 	}
 	if *slackChannelID == "" {
 		return nil, fmt.Errorf("slack-channel-id must be specified")
@@ -250,5 +292,6 @@ func parseFlag() (*opt, error) {
 		targetDate:         *targetDate,
 		timeout:            *timeoutOption,
 		version:            *version,
+		webhook:            *webhookOption,
 	}, nil
 }
