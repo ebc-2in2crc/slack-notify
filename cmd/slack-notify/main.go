@@ -274,8 +274,8 @@ func parseFlag() (*opt, error) {
 	if *slackAccessToken == "" && *webhookOption == "" {
 		return nil, fmt.Errorf("slack-token or webhook must be specified")
 	}
-	if *slackChannelID == "" {
-		return nil, fmt.Errorf("slack-channel-id must be specified")
+	if *slackChannelID == "" && *webhookOption == "" {
+		return nil, fmt.Errorf("slack-channel-id or webhook must be specified")
 	}
 
 	return &opt{
