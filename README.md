@@ -56,6 +56,8 @@ Usage of slack-notify:
   -timeout duration
     	Specify timeout (default 15m0s)
   -v	Show version
+  -webhook string
+        Specify Slack Webhook URL
 ```
 
 ## Installation
