@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"google.golang.org/api/calendar/v3"
+
 	"golang.org/x/net/context"
 )
 
@@ -67,15 +69,7 @@ func main() {
 	}
 
 	// Slack に投稿するメッセージを作成する
-	a := make([]string, len(events))
-	for i := range events {
-		a[i] = fmt.Sprintf("• %s", events[i].Summary)
-	}
-	desc := opt.message
-	if len(events) == 0 && opt.alternativeMessage != "" {
-		desc = opt.alternativeMessage
-	}
-	msg := fmt.Sprintf("%s\n\n%s", desc, strings.Join(a, "\n"))
+	msg := createSlackMessage(events, opt.message, opt.alternativeMessage)
 
 	// Slack に投稿する
 	if err := c.poster.post(ctx, opt.slackChannelID, msg); err != nil {
@@ -155,4 +149,17 @@ func newClient(opt *opt) (*client, error) {
 	})
 
 	return &client{fetcher: ef, poster: sp}, nil
+}
+
+func createSlackMessage(events []*calendar.Event, msg, alt string) string {
+	if len(events) == 0 && alt != "" {
+		return alt
+	}
+
+	a := make([]string, len(events))
+	for i := range events {
+		a[i] = fmt.Sprintf("• %s", events[i].Summary)
+	}
+	s := fmt.Sprintf("%s\n\n%s", msg, strings.Join(a, "\n"))
+	return s
 }
