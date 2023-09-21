@@ -69,7 +69,7 @@ func newEventFetcher(opt *eventFetcherOpt) (*eventFetcher, error) {
 	return ef, nil
 }
 
-func (s *eventFetcher) fetch(ctx context.Context) ([]string, error) {
+func (s *eventFetcher) fetch(ctx context.Context) ([]*calendar.Event, error) {
 	logger.Printf("fetching events...")
 
 	service, err := calendar.NewService(ctx, option.WithCredentialsJSON(s.credentials))
@@ -90,10 +90,10 @@ func (s *eventFetcher) fetch(ctx context.Context) ([]string, error) {
 		return events.Items[i].Start.DateTime < events.Items[j].Start.DateTime
 	})
 
-	var a []string
+	var a []*calendar.Event
 	for _, item := range events.Items {
 		if s.filter.MatchString(item.Summary) {
-			a = append(a, item.Summary)
+			a = append(a, item)
 		}
 	}
 

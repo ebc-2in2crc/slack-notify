@@ -67,14 +67,15 @@ func main() {
 	}
 
 	// Slack に投稿するメッセージを作成する
+	a := make([]string, len(events))
 	for i := range events {
-		events[i] = fmt.Sprintf("• %s", events[i])
+		a[i] = fmt.Sprintf("• %s", events[i].Summary)
 	}
 	desc := opt.message
 	if len(events) == 0 && opt.alternativeMessage != "" {
 		desc = opt.alternativeMessage
 	}
-	msg := fmt.Sprintf("%s\n\n%s", desc, strings.Join(events, "\n"))
+	msg := fmt.Sprintf("%s\n\n%s", desc, strings.Join(a, "\n"))
 
 	// Slack に投稿する
 	if err := c.poster.post(ctx, opt.slackChannelID, msg); err != nil {
