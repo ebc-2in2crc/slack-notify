@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"testing"
 
 	"google.golang.org/api/calendar/v3"
@@ -13,6 +14,7 @@ func TestCreateSlackMessage(t *testing.T) {
 		msg    string
 		alt    string
 		want   string
+		err    error
 	}{
 		{
 			name: "normal",
@@ -22,7 +24,8 @@ func TestCreateSlackMessage(t *testing.T) {
 			},
 			msg:  "Test Message",
 			alt:  "Alternative Message",
-			want: "Test Message\n\n• Summary1\n• Summary2",
+			want: "Test Message\n\n• Summary1\n• Summary2\n",
+			err:  nil,
 		},
 		{
 			name:   "empty events",
@@ -30,13 +33,17 @@ func TestCreateSlackMessage(t *testing.T) {
 			msg:    "Test Message",
 			alt:    "Alternative Message",
 			want:   "Alternative Message",
+			err:    nil,
 		},
 	}
 
 	for _, tt := range tests {
-		got := createSlackMessage(tt.events, tt.msg, tt.alt)
+		got, err := createSlackMessage(tt.events, tt.msg, tt.alt)
 		if got != tt.want {
 			t.Errorf("Want '%s', but got '%s'", tt.want, got)
+		}
+		if !errors.Is(err, tt.err) {
+			t.Errorf("Want '%s', but got '%s'", tt.err, err)
 		}
 	}
 }

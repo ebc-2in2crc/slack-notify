@@ -1,11 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"log"
 	"os"
-	"strings"
+	"text/template"
 	"time"
 
 	"google.golang.org/api/calendar/v3"
@@ -69,7 +70,10 @@ func main() {
 	}
 
 	// Slack に投稿するメッセージを作成する
-	msg := createSlackMessage(events, opt.message, opt.alternativeMessage)
+	msg, err := createSlackMessage(events, opt.message, opt.alternativeMessage)
+	if err != nil {
+		logger.Fatalf("failed to create slack message: %v", err)
+	}
 
 	// Slack に投稿する
 	if err := c.poster.post(ctx, opt.slackChannelID, msg); err != nil {
@@ -151,15 +155,35 @@ func newClient(opt *opt) (*client, error) {
 	return &client{fetcher: ef, poster: sp}, nil
 }
 
-func createSlackMessage(events []*calendar.Event, msg, alt string) string {
+// EventData is a data for template.
+type EventData struct {
+	Msg    string
+	Events []*calendar.Event
+}
+
+func createSlackMessage(events []*calendar.Event, msg, alt string) (string, error) {
 	if len(events) == 0 && alt != "" {
-		return alt
+		return alt, nil
 	}
 
-	a := make([]string, len(events))
-	for i := range events {
-		a[i] = fmt.Sprintf("• %s", events[i].Summary)
+	data := EventData{
+		Events: events,
+		Msg:    msg,
 	}
-	s := fmt.Sprintf("%s\n\n%s", msg, strings.Join(a, "\n"))
-	return s
+
+	tmpl, err := template.New("slackMessage").Parse(`{{.Msg}}
+
+{{range .Events -}}
+• {{.Summary}}
+{{end}}`)
+	if err != nil {
+		panic(err)
+	}
+
+	var buffer bytes.Buffer
+	if err := tmpl.Execute(&buffer, data); err != nil {
+		return "", fmt.Errorf("failed to execute template: %w", err)
+	}
+
+	return buffer.String(), nil
 }
