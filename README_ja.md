@@ -15,6 +15,7 @@
 
 - Google カレンダーからイベントを取得します
 - 取得したイベントを Slack に投稿します
+- Slack に投稿するメッセージは、カスタマイズ可能です
 
 ## Usage
 
@@ -47,6 +48,8 @@ Usage of slack-notify:
     	Specify Location (default "UTC")
   -message string
     	Specify message
+  -message-template-file string
+        Specify custom message template file
   -slack-channel-id string
     	Specify Slack Channel ID
   -slack-token string
