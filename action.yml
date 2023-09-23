@@ -3,7 +3,7 @@ description: "Install slack-notify."
 inputs:
   version:
     description: "A version to install slack-notify."
-    default: "v0.0.8"
+    default: "v0.0.9"
 
 runs:
   using: "composite"
