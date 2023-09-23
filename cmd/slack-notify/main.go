@@ -18,25 +18,32 @@ var version = "0.0.1"
 
 var logger *log.Logger
 
+const defaultMessageTemplate = `{{.Msg}}
+
+{{range .Events -}}
+• {{.Summary}}
+{{end}}`
+
 func init() {
 	logger = log.New(os.Stderr, "", log.Ldate|log.Lmicroseconds)
 }
 
 type opt struct {
-	alternativeMessage string
-	calendarID         string
-	credentials        string
-	credentialsFile    string
-	dryRun             bool
-	eventFilterRegexp  string
-	location           string
-	slackAccessToken   string
-	slackChannelID     string
-	message            string
-	targetDate         string
-	timeout            time.Duration
-	version            bool
-	webhook            string
+	alternativeMessage  string
+	calendarID          string
+	credentials         string
+	credentialsFile     string
+	dryRun              bool
+	eventFilterRegexp   string
+	location            string
+	message             string
+	messageTemplateFile string
+	slackAccessToken    string
+	slackChannelID      string
+	targetDate          string
+	timeout             time.Duration
+	version             bool
+	webhook             string
 }
 
 type client struct {
@@ -70,7 +77,7 @@ func main() {
 	}
 
 	// Slack に投稿するメッセージを作成する
-	msg, err := createSlackMessage(events, opt.message, opt.alternativeMessage)
+	msg, err := createSlackMessage(events, opt.message, opt.alternativeMessage, opt.messageTemplateFile)
 	if err != nil {
 		logger.Fatalf("failed to create slack message: %v", err)
 	}
@@ -90,6 +97,7 @@ func parseFlag() (*opt, error) {
 	eventFilterRegexp := flag.String("event-filter-regexp", ".", "Specify event filter regexp")
 	location := flag.String("location", "UTC", "Specify Location")
 	message := flag.String("message", "", "Specify message")
+	messageTemplateFile := flag.String("message-template-file", "", "Specify custom message template file")
 	slackAccessToken := flag.String("slack-token", "", "Specify Slack Access Token")
 	slackChannelID := flag.String("slack-channel-id", "", "Specify Slack Channel ID")
 	targetDate := flag.String("target-date", "", "Specify targetDate date. e.g. 2020-01-01")
@@ -116,20 +124,21 @@ func parseFlag() (*opt, error) {
 	}
 
 	return &opt{
-		alternativeMessage: *alternativeMessage,
-		calendarID:         *calendarID,
-		credentials:        *credentials,
-		credentialsFile:    *credentialsFile,
-		dryRun:             *dryRun,
-		eventFilterRegexp:  *eventFilterRegexp,
-		location:           *location,
-		slackAccessToken:   *slackAccessToken,
-		slackChannelID:     *slackChannelID,
-		message:            *message,
-		targetDate:         *targetDate,
-		timeout:            *timeoutOption,
-		version:            *version,
-		webhook:            *webhookOption,
+		alternativeMessage:  *alternativeMessage,
+		calendarID:          *calendarID,
+		credentials:         *credentials,
+		credentialsFile:     *credentialsFile,
+		dryRun:              *dryRun,
+		eventFilterRegexp:   *eventFilterRegexp,
+		location:            *location,
+		message:             *message,
+		messageTemplateFile: *messageTemplateFile,
+		slackAccessToken:    *slackAccessToken,
+		slackChannelID:      *slackChannelID,
+		targetDate:          *targetDate,
+		timeout:             *timeoutOption,
+		version:             *version,
+		webhook:             *webhookOption,
 	}, nil
 }
 
@@ -162,23 +171,28 @@ type EventData struct {
 	Events []*calendar.Event
 }
 
-func createSlackMessage(events []*calendar.Event, msg, alt string) (string, error) {
+func createSlackMessage(events []*calendar.Event, msg, alt, msgTemplateFile string) (string, error) {
 	if len(events) == 0 && alt != "" {
 		return alt, nil
+	}
+
+	msgTemplate := defaultMessageTemplate
+	if msgTemplateFile != "" {
+		b, err := os.ReadFile(msgTemplateFile)
+		if err != nil {
+			return "", fmt.Errorf("failed to read message template file: %w", err)
+		}
+		msgTemplate = string(b)
+	}
+
+	tmpl, err := template.New("slackMessage").Parse(msgTemplate)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse template: %w", err)
 	}
 
 	data := EventData{
 		Events: events,
 		Msg:    msg,
-	}
-
-	tmpl, err := template.New("slackMessage").Parse(`{{.Msg}}
-
-{{range .Events -}}
-• {{.Summary}}
-{{end}}`)
-	if err != nil {
-		panic(err)
 	}
 
 	var buffer bytes.Buffer
