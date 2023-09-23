@@ -40,17 +40,17 @@ build: deps
 ## Cross build binaries
 .PHONY: cross-build
 cross-build:
-	goreleaser build --rm-dist
+	goreleaser build --clean
 
 ## Make package
 .PHONY: package
 package:
-	goreleaser release --snapshot --skip-publish --rm-dist
+	goreleaser release --snapshot --skip-publish --clean
 
 ## Release package to Github
 .PHONY: release
 release:
-	goreleaser release --rm-dist
+	goreleaser release --clean
 
 ## Format source codes
 .PHONY: fmt
