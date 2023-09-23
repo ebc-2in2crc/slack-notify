@@ -63,6 +63,63 @@ Usage of slack-notify:
         Specify Slack Webhook URL
 ```
 
+## メッセージのカスタマイズ
+
+デフォルトでは、Slack に投稿されるメッセージは次のテンプレートが使われます。
+テンプレートについては [text/template](https://golang.org/pkg/text/template/) を参照してください。
+
+```go
+{{.Msg}}
+
+{{range .Events -}}
+• {{.Summary}}
+{{end}}`
+```
+
+実際に Slack に投稿されるメッセージは、次のようになります。
+
+```text
+本日のイベントをお知らせします。
+
+• あるイベント
+• 別のイベント
+• また別のイベント
+```
+
+テンプレートに渡されるデータは、次のような構造体です。
+
+```go
+type EventData struct {
+    Msg    string // -message で指定されたメッセージ
+    Events []*calendar.Event
+}
+```
+
+メッセージをカスタマイズするには、`-message-template-file` でテンプレートファイルを指定します。
+
+```bash
+$ cat template.txt
+{{.Msg}}
+
+{{range $i, $v := .Events -}}
+{{$i}}. {{$v.Summary}}
+{{end}}
+
+$ slack-notify \
+  -message-template-file template.txt \
+  # 省略
+```
+
+実際に Slack に投稿されるメッセージは、次のようになります。
+
+```text
+本日のイベントをお知らせします。
+
+0. あるイベント
+1. 別のイベント
+2. また別のイベント
+```
+
 ## Installation
 
 ### Developer

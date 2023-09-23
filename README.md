@@ -63,6 +63,63 @@ Usage of slack-notify:
         Specify Slack Webhook URL
 ```
 
+## Customizing Messages
+
+By default, the message posted to Slack uses the following template.
+Please refer to [text/template](https://golang.org/pkg/text/template/) for the template.
+
+```go
+{{.Msg}}
+
+{{range .Events -}}
+• {{.Summary}}
+{{end}}`
+```
+
+The actual message posted to Slack will be as follows.
+
+```text
+Announcing today's events.
+
+• A certain event
+• Another event
+• Yet another event
+```
+
+The data passed to the template is a structure like the following.
+
+```go
+type EventData struct {
+    Msg    string // The message specified with -message
+    Events []*calendar.Event
+}
+```
+
+To customize the message, specify the template file with `-message-template-file`.
+
+```bash
+$ cat template.txt
+{{.Msg}}
+
+{{range $i, $v := .Events -}}
+{{$i}}. {{$v.Summary}}
+{{end}}
+
+$ slack-notify \
+  -message-template-file template.txt \
+  # Omitted
+```
+
+The actual message posted to Slack will be as follows.
+
+```text
+Announcing today's events.
+
+0. A certain event
+1. Another event
+2. Yet another event
+```
+
 ## Installation
 
 ### Developer
