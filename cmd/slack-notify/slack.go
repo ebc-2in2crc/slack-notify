@@ -10,6 +10,7 @@ import (
 type slackPoster struct {
 	dryRun           bool
 	slackAccessToken string
+	slackChannelID   string
 	slackWebHook     string
 	*slack.Client
 }
@@ -17,6 +18,7 @@ type slackPoster struct {
 type slackPosterOpt struct {
 	dryRun           bool
 	slackAccessToken string
+	slackChannelID   string
 	webhook          string
 }
 
@@ -24,13 +26,14 @@ func newSlackPoster(opt *slackPosterOpt) *slackPoster {
 	return &slackPoster{
 		dryRun:           opt.dryRun,
 		slackAccessToken: opt.slackAccessToken,
+		slackChannelID:   opt.slackChannelID,
 		slackWebHook:     opt.webhook,
 		Client:           slack.New(opt.slackAccessToken),
 	}
 }
 
-func (p *slackPoster) post(ctx context.Context, channelID, msg string) error {
-	if err := p.postMessage(ctx, channelID, msg); err != nil {
+func (p *slackPoster) post(ctx context.Context, msg string) error {
+	if err := p.postMessage(ctx, msg); err != nil {
 		return err
 	}
 
@@ -41,7 +44,7 @@ func (p *slackPoster) post(ctx context.Context, channelID, msg string) error {
 	return nil
 }
 
-func (p *slackPoster) postMessage(ctx context.Context, channelID, msg string) error {
+func (p *slackPoster) postMessage(ctx context.Context, msg string) error {
 	logger.Printf("posting message...")
 
 	if p.slackAccessToken == "" {
@@ -53,7 +56,7 @@ func (p *slackPoster) postMessage(ctx context.Context, channelID, msg string) er
 		return nil
 	}
 
-	_, _, err := p.PostMessageContext(ctx, channelID, slack.MsgOptionText(msg, false))
+	_, _, err := p.PostMessageContext(ctx, p.slackChannelID, slack.MsgOptionText(msg, false))
 	if err != nil {
 		return fmt.Errorf("failed to post message: %w", err)
 	}

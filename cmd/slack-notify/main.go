@@ -76,7 +76,7 @@ func main() {
 	}
 
 	// Slack に投稿する
-	if err := c.poster.post(ctx, opt.slackChannelID, msg); err != nil {
+	if err := c.poster.post(ctx, msg); err != nil {
 		logger.Fatalf("failed to post: %v", err)
 	}
 }
@@ -149,6 +149,7 @@ func newClient(opt *opt) (*client, error) {
 	sp := newSlackPoster(&slackPosterOpt{
 		dryRun:           opt.dryRun,
 		slackAccessToken: opt.slackAccessToken,
+		slackChannelID:   opt.slackChannelID,
 		webhook:          opt.webhook,
 	})
 
