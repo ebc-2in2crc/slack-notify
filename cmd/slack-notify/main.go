@@ -167,6 +167,7 @@ func newClient(opt *opt) (*client, error) {
 
 // EventData is a data for template.
 type EventData struct {
+	// Msg には `-message` オプションに指定されたメッセージが入る
 	Msg    string
 	Events []*calendar.Event
 }
