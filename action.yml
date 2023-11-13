@@ -4,6 +4,9 @@ inputs:
   version:
     description: "A version to install slack-notify."
     default: "v0.0.9"
+  destination:
+    description: "A destination to install slack-notify."
+    default: "/usr/local/bin"
 
 runs:
   using: "composite"
@@ -14,6 +17,6 @@ runs:
         cd /tmp
         curl -sLO https://github.com/ebc-2in2crc/slack-notify/releases/download/${{ inputs.version }}/slack-notify_linux_amd64.zip
         unzip slack-notify_linux_amd64.zip
-        sudo install slack-notify_linux_amd64/slack-notify /usr/local/bin
+        sudo install slack-notify_linux_amd64/slack-notify ${{ inputs.destination }}
         rm -rf slack-notify_linux_amd64/ slack-notify_linux_amd64.zip
         slack-notify -v
